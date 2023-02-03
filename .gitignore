@@ -3,3 +3,4 @@ test-ledger
 PreReqs/paulx-escrow/*-dump.txt
 PreReqs/paulx-escrow/*.so
 PreReqs/paulx-escrow/target/
+.unotes/
