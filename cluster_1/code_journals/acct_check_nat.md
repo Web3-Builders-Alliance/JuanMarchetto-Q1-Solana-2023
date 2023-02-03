@@ -48,3 +48,66 @@ Inside this function the fist thing we do is some basic cheking, so in case the 
         return Err(ProgramError::NotEnoughAccountKeys)
     };
 ```
+
+Then we asign each account of the array to an individual variable:
+
+```rust
+    // Accounts passed in a vector must be in the expected order.
+    let accounts_iter = &mut accounts.iter();
+    let _payer = next_account_info(accounts_iter)?;
+    let account_to_create = next_account_info(accounts_iter)?;
+    let account_to_change = next_account_info(accounts_iter)?;
+    let system_program = next_account_info(accounts_iter)?;
+```
+
+We check if the account we want to create is not initializated simply by checking if has 0 Lamports if not we trow an error an finnish the program
+
+```rust
+ // You can make sure an account has NOT been initialized.
+    
+    msg!("New account: {}", account_to_create.key);
+    if account_to_create.lamports() != 0 {
+        msg!("The program expected the account to create to not yet be initialized.");
+        return Err(ProgramError::AccountAlreadyInitialized)
+    };
+    // (Create account...)
+```
+
+We check if the account we want  change is already initializated by looking if has more than 0 lamports (an account needs to have some SOL in order to pay rent, if has the amount needed to pay for 2 year becomes rent exemp)
+
+```rust
+    // You can also make sure an account has been initialized.
+    msg!("Account to change: {}", account_to_change.key);
+    if account_to_change.lamports() == 0 {
+        msg!("The program expected the account to change to be initialized.");
+        return Err(ProgramError::UninitializedAccount)
+    };
+```
+
+We check if our program is the owner of the account (only the owner of an account can change his data, the only thing that a non owner can do is increment the ampunt of the account, and a program is the owner of the PDAs that it creates)
+
+```rust
+    // If we want to modify an account's data, it must be owned by our program.
+    if account_to_change.owner != program_id {
+        msg!("Account to change does not have the correct program id.");
+        return Err(ProgramError::IncorrectProgramId)
+    };
+
+```
+
+This is super important: you need to check that the system program is actualy the system program if not a hacker can pass his oun program that emulates the system program to authorize a behaviour that is not the intended one, and, for example stole all you money:
+
+```rust
+
+   // You can also check pubkeys against constants.
+    if system_program.key != &system_program::ID {
+        return Err(ProgramError::IncorrectProgramId)
+    };
+```
+
+Finally if everithing is ok we return a success value and finishi our function:
+
+```rust
+    Ok(())
+}
+```
