@@ -1,4 +1,8 @@
-use solana_program::{program_error::ProgramError, pubkey::Pubkey, instruction::{Instruction, AccountMeta}};
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    program_error::ProgramError,
+    pubkey::Pubkey,
+};
 use std::convert::TryInto;
 use std::mem::size_of;
 
@@ -41,7 +45,7 @@ pub enum EscrowInstruction {
     //Reset Time lock and time_out
     /// 0. `[signer]` The initializer that is reseting the timelock
     /// 1. `[writable]` The escrow account holding the escrow info
-    ResetTimeLock {n},
+    ResetTimeLock {},
     //Cancel Escrow
     /// 0. `[signer]` The initializer that is canceling their escrow
     /// 1. `[writable]` The PDA's temp token account to get tokens from and eventually close
@@ -49,7 +53,7 @@ pub enum EscrowInstruction {
     /// 4. `[writable]` The escrow account holding the escrow info
     /// 5. `[]` The token program
     /// 6. `[]` The PDA account
-    Cancel { }
+    Cancel {},
 }
 
 impl EscrowInstruction {
@@ -64,8 +68,8 @@ impl EscrowInstruction {
             1 => Self::Exchange {
                 amount: Self::unpack_amount(rest)?,
             },
-            2 => Self::ResetTimeLock { },
-            3 => Self::Cancel { },
+            2 => Self::ResetTimeLock {},
+            3 => Self::Cancel {},
             _ => return Err(InvalidInstruction.into()),
         })
     }
@@ -90,10 +94,10 @@ impl EscrowInstruction {
                 buf.push(1);
                 buf.extend_from_slice(&amount.to_le_bytes());
             }
-            Self::ResetTimeLock {  } => {
+            Self::ResetTimeLock {} => {
                 buf.push(2);
             }
-            Self::Cancel {  } => {
+            Self::Cancel {} => {
                 buf.push(3);
             }
         }
@@ -101,24 +105,21 @@ impl EscrowInstruction {
     }
 }
 
-
-    /// 0. `[signer]` The account of the person initializing the escrow
-    /// 1. `[writable]` Temporary token account that should be created prior to this instruction and owned by the initializer
-    /// 2. `[]` The initializer's token account for the token they will receive should the trade go through
-    /// 3. `[writable]` The escrow account, it will hold all necessary info about the trade.
-    /// 5. `[]` The token program
+/// 0. `[signer]` The account of the person initializing the escrow
+/// 1. `[writable]` Temporary token account that should be created prior to this instruction and owned by the initializer
+/// 2. `[]` The initializer's token account for the token they will receive should the trade go through
+/// 3. `[writable]` The escrow account, it will hold all necessary info about the trade.
+/// 5. `[]` The token program
 pub fn init_escrow(
-    program_id:&Pubkey,
+    program_id: &Pubkey,
     initiator: &Pubkey,
-    pda_token_acct:&Pubkey,
-    init_token_acct:&Pubkey,
+    pda_token_acct: &Pubkey,
+    init_token_acct: &Pubkey,
     escrow_account: &Pubkey,
     token_program: &Pubkey,
     amount: u64,
 ) -> Result<Instruction, ProgramError> {
-    let data = EscrowInstruction::InitEscrow {
-        amount,
-    }.pack();
+    let data = EscrowInstruction::InitEscrow { amount }.pack();
 
     let accounts = vec![
         AccountMeta::new(*initiator, true),
@@ -135,36 +136,34 @@ pub fn init_escrow(
     })
 }
 
-    pub fn exchange(
-        program_id: &Pubkey,
-        taker: &Pubkey,
-        taker_token_account: &Pubkey,
-        taker_token_account2: &Pubkey,
-        temp_token_account: &Pubkey,
-        initializer_token_account: &Pubkey,
-        initializer_main_account: &Pubkey,
-        escrow_account: &Pubkey,
-        token_program: &Pubkey,
-        amount: u64,
-    ) -> Result<Instruction, ProgramError> {
-        let data = EscrowInstruction::Exchange {
-            amount,
-        }.pack();
-    
-        let accounts = vec![
-            AccountMeta::new(*taker, true),
-            AccountMeta::new(*taker_token_account, false),
-            AccountMeta::new(*taker_token_account2, false),
-            AccountMeta::new(*temp_token_account, false),
-            AccountMeta::new(*initializer_token_account, false),
-            AccountMeta::new(*initializer_main_account, false),
-            AccountMeta::new(*escrow_account, false),
-            AccountMeta::new_readonly(*token_program, false),
-        ];
-    
-        Ok(Instruction {
-            program_id: *program_id,
-            accounts,
-            data,
-        })
-    }
+pub fn exchange(
+    program_id: &Pubkey,
+    taker: &Pubkey,
+    taker_token_account: &Pubkey,
+    taker_token_account2: &Pubkey,
+    temp_token_account: &Pubkey,
+    initializer_token_account: &Pubkey,
+    initializer_main_account: &Pubkey,
+    escrow_account: &Pubkey,
+    token_program: &Pubkey,
+    amount: u64,
+) -> Result<Instruction, ProgramError> {
+    let data = EscrowInstruction::Exchange { amount }.pack();
+
+    let accounts = vec![
+        AccountMeta::new(*taker, true),
+        AccountMeta::new(*taker_token_account, false),
+        AccountMeta::new(*taker_token_account2, false),
+        AccountMeta::new(*temp_token_account, false),
+        AccountMeta::new(*initializer_token_account, false),
+        AccountMeta::new(*initializer_main_account, false),
+        AccountMeta::new(*escrow_account, false),
+        AccountMeta::new_readonly(*token_program, false),
+    ];
+
+    Ok(Instruction {
+        program_id: *program_id,
+        accounts,
+        data,
+    })
+}

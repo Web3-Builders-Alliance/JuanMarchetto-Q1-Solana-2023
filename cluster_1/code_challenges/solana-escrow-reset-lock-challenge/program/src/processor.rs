@@ -6,7 +6,7 @@ use solana_program::{
     program_error::ProgramError,
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
-    sysvar::{rent::Rent, Sysvar},
+    sysvar::{clock::Clock, rent::Rent, Sysvar},
 };
 
 use spl_token::state::Account as TokenAccount;
@@ -31,11 +31,11 @@ impl Processor {
                 msg!("Instruction: Exchange");
                 Self::process_exchange(accounts, amount, program_id)
             }
-            EscrowInstruction::ResetTimeLock { } => {
+            EscrowInstruction::ResetTimeLock {} => {
                 msg!("Instruction: ResetTimeLock");
-                Self::process_reset_timelock(accounts, program_id)
+                Self::process_reset_time_lock(accounts, program_id)
             }
-            EscrowInstruction::Cancel { } => {
+            EscrowInstruction::Cancel {} => {
                 msg!("Instruction: Cancel");
                 Self::process_cancel(accounts, program_id)
             }
@@ -78,6 +78,7 @@ impl Processor {
         escrow_info.temp_token_account_pubkey = *temp_token_account.key;
         escrow_info.initializer_token_to_receive_account_pubkey = *token_to_receive_account.key;
         escrow_info.expected_amount = amount;
+        escrow_info.unlock_time = Clock::get()?.slot.checked_add(100).unwrap();
 
         Escrow::pack(escrow_info, &mut escrow_account.try_borrow_mut_data()?)?;
         let (pda, _nonce) = Pubkey::find_program_address(&[b"escrow"], program_id);
@@ -135,6 +136,14 @@ impl Processor {
         let escrow_account = next_account_info(account_info_iter)?;
 
         let escrow_info = Escrow::unpack(&escrow_account.try_borrow_data()?)?;
+
+        let current_slot = Clock::get()?.slot;
+
+        if current_slot > escrow_info.unlock_time
+            && escrow_info.unlock_time.checked_add(1000).unwrap() > current_slot
+        {
+            return Err(EscrowError::TimeConstraintWasNotSatisfied.into());
+        }
 
         if escrow_info.temp_token_account_pubkey != *pdas_temp_token_account.key {
             return Err(ProgramError::InvalidAccountData);
@@ -248,8 +257,7 @@ impl Processor {
 
         let token_program = next_account_info(account_info_iter)?;
         let pda_account_info = next_account_info(account_info_iter)?;
-        let pda_token_account_info =
-            TokenAccount::unpack(&pda_token_account.try_borrow_data()?)?;
+        let pda_token_account_info = TokenAccount::unpack(&pda_token_account.try_borrow_data()?)?;
 
         let (pda, nonce) = Pubkey::find_program_address(&[b"escrow"], program_id);
 
@@ -260,7 +268,7 @@ impl Processor {
             initializer_sent_token_account.key,
             &pda,
             &[&pda],
-            pda_token_account_info.amount
+            pda_token_account_info.amount,
         )?;
         msg!("Calling the token program to transfer tokens back to the initializer...");
         invoke_signed(
@@ -303,7 +311,31 @@ impl Processor {
 
         Ok(())
     }
-    
 
-    fn process_reset_time_lock
+    fn process_reset_time_lock(accounts: &[AccountInfo], program_id: &Pubkey) -> ProgramResult {
+        let account_info_iter = &mut accounts.iter();
+        let initializer = next_account_info(account_info_iter)?;
+
+        if !initializer.is_signer {
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+
+        let _pda_token_account = next_account_info(account_info_iter)?;
+        let _initializer_main_account = next_account_info(account_info_iter)?;
+        let _initializer_sent_token_account = next_account_info(account_info_iter)?;
+        let escrow_account = next_account_info(account_info_iter)?;
+
+        if escrow_account.owner != program_id || escrow_account.is_writable == false {
+            return Err(ProgramError::IllegalOwner);
+        }
+
+        let mut escrow_info = Escrow::unpack(&escrow_account.try_borrow_data()?)?;
+
+        if escrow_info.initializer_pubkey != *initializer.key {
+            return Err(ProgramError::InvalidAccountData);
+        }
+        escrow_info.unlock_time = Clock::get()?.slot.checked_add(100).unwrap();
+
+        Ok(())
+    }
 }
