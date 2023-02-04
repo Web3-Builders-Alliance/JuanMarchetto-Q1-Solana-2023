@@ -110,3 +110,25 @@ Finally if everything is ok we return a success value and finish our function:
     Ok(())
 }
 ```
+
+### Additional Questions
+
+***
+
+##### What are the concepts?
+- Crates (we import one using the use keyboard).
+- Macros (We use entrypoint! and msg!).
+- Enums (We use for example the solana_program::program_error::ProgramError)
+- Functions (We declare one)
+- Tuples (For example we use an empty tuple)
+- References
+- Is statements
+
+##### What is the organization?
+We have an use statement then we use a macro and finally the function that we use in that macro.
+
+##### What is the contract doing? What is the mechanism?
+It simply do account checking and returns errors if something doesn't checks, finally if something is as expected return with success
+
+##### How could it be better? More efficient? Safer?
+The code could be better if we do all these checkings with traits like in anchor.
