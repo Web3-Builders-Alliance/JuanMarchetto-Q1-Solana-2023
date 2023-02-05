@@ -122,7 +122,7 @@ Finally if everything is ok we return a success value and finish our function:
 - Functions (We declare one)
 - Tuples (For example we use an empty tuple)
 - References
-- Is statements
+- If statements
 
 ##### What is the organization?
 We have an use statement then we use a macro and finally the function that we use in that macro.
