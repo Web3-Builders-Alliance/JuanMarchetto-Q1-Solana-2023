@@ -128,7 +128,7 @@ Finally if everything is ok we return a success value and finish our function:
 We have an use statement then we use a macro and finally the function that we use in that macro.
 
 ##### What is the contract doing? What is the mechanism?
-It simply do account checking and returns errors if something doesn't checks, finally if something is as expected return with success
+It simply do account checking and returns errors if something doesn't checks, finally if everything is as expected return with success
 
 ##### How could it be better? More efficient? Safer?
 The code could be better if we do all these checkings with traits like in anchor.
