@@ -1,46 +1,46 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{program::invoke, system_instruction},
+    solana_program::{program::invoke, system_instruction, self},
 };
 
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("94syforMJhHfxQUkSNqTq6aUrkaJwW17BbaSFTfXe67j");
 
 #[program]
 pub mod deposit {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-
+    pub fn initialize(ctx: Context<Initialize>, _name: String) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+        vault.owner = *ctx.accounts.owner.key;
         Ok(())
     }
 
-    pub fn deposit_into_pda(ctx: Context<DepositInto>, amount_to_pda: u64) -> Result<()> {
+    pub fn deposit_into_pda(ctx: Context<DepositInto>, amount: u64) -> Result<()> {
         invoke(
             &system_instruction::transfer(
                 ctx.accounts.payer.key,
-                &ctx.accounts.pda.key(),
-                amount_to_pda,
+                &ctx.accounts.vault.key(),
+                amount,
             ),
             &[
                 ctx.accounts.payer.to_account_info().clone(),
-                ctx.accounts.pda.to_account_info().clone(),
+                ctx.accounts.vault.to_account_info().clone(),
             ],
         )?;
         Ok(())
     }
 
-    pub fn withdaw(ctx: Context<DepositInto>, amount_to_pda: u64) -> Result<()> {
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         invoke(
             &system_instruction::transfer(
-                &ctx.accounts.pda.key(),
+                &ctx.accounts.vault.key(),
                 ctx.accounts.payer.key,
-                amount_to_pda,
+                amount,
             ),
             &[
-                ctx.accounts.pda.to_account_info().clone(),
+                ctx.accounts.vault.to_account_info().clone(),
                 ctx.accounts.payer.to_account_info().clone(),
-
             ],
         )?;
         Ok(())
@@ -48,31 +48,41 @@ pub mod deposit {
 }
 
 #[derive(Accounts)]
+#[instruction(name: String)]
 pub struct Initialize<'info> {
     #[account(
         init,
-        payer = payer,
-        space = 8,
-        seeds = [b"deposit".as_ref(),],
+        payer = owner,
+        space = 8 + solana_program::pubkey::PUBKEY_BYTES,
+        seeds = [name.as_ref()],
         bump
-
     )]
-    pub pda: Account<'info, DepositSpace>,
+    pub vault: Account<'info, Vault>,
     /// CHECK:
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct DepositInto<'info> {
     #[account(mut)]
-    pub pda: Account<'info, DepositSpace>,
+    pub vault: Account<'info, Vault>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(mut)]
+    pub vault: Account<'info, Vault>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[account]
-pub struct DepositSpace {
+pub struct Vault {
+    pub owner: Pubkey
 }
