@@ -1,8 +1,7 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{program::invoke, system_instruction, self},
+    solana_program::{self, program::invoke, system_instruction},
 };
-
 
 declare_id!("94syforMJhHfxQUkSNqTq6aUrkaJwW17BbaSFTfXe67j");
 
@@ -32,17 +31,16 @@ pub mod deposit {
     }
 
     pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
-        invoke(
-            &system_instruction::transfer(
-                &ctx.accounts.vault.key(),
-                ctx.accounts.payer.key,
-                amount,
-            ),
-            &[
-                ctx.accounts.vault.to_account_info().clone(),
-                ctx.accounts.payer.to_account_info().clone(),
-            ],
-        )?;
+        let vault = &mut ctx.accounts.vault;
+        let user = &mut ctx.accounts.user;
+
+        if vault.owner != *user.key {
+            return Err(error!(ErrorCode::InvalidOwner));
+        }
+
+        **vault.to_account_info().try_borrow_mut_lamports()? -= amount;
+        **user.try_borrow_mut_lamports()? += amount;
+
         Ok(())
     }
 }
@@ -78,11 +76,17 @@ pub struct Withdraw<'info> {
     #[account(mut)]
     pub vault: Account<'info, Vault>,
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[account]
 pub struct Vault {
-    pub owner: Pubkey
+    pub owner: Pubkey,
+}
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("User isn't the owner of this vault")]
+    InvalidOwner,
 }
