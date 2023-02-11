@@ -1,5 +1,5 @@
 [programs.localnet]
-solana_escrow_anchor = "ECh7FQHy1hDxkiYjPVi8tYhmZ2oHE1zJqsyxbP4vS3nd"
+solana_escrow_anchor = "6QoWMmFAQ5jJwVVx9YeWt3s3ZoY99e6ZdyXFpXzuF2ER"
 
 [registry]
 url = "https://anchor.projectserum.com"

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, CloseAccount, SetAuthority, TokenAccount, Transfer, Token};
 
-declare_id!("ECh7FQHy1hDxkiYjPVi8tYhmZ2oHE1zJqsyxbP4vS3nd");
+declare_id!("6QoWMmFAQ5jJwVVx9YeWt3s3ZoY99e6ZdyXFpXzuF2ER");
 
 #[program]
 pub mod solana_escrow_anchor {
@@ -198,7 +198,7 @@ impl Escrow {
     const LEN: usize = DISCRIMINATOR_LENGTH +
         BOOL_LENGTH +
         PUBLIC_KEY_LENGTH * 3 +
-        U64_LENGTH;
+        U64_LENGTH * 2;
 }
 
 impl<'info> From<&mut Initialize<'info>> for CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
