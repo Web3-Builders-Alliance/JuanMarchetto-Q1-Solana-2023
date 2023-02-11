@@ -34,7 +34,8 @@ Since `Accounts` holds refences, those references must have lifetimes so that th
 The `Signer` type validates that the accouns is a signer.
 The `#[account(mut)]` attribute has the mut constrain, wich is needed if we will need to mutate this account.
 The `/// CHECK:` comment allows us to skip doing checkings of that account here (we can do some custom checking in our instructions if is needed)
-We will recieve 4 accounts: payer, account_to_create, account_to_change and system_program
+We will recieve 4 accounts: payer, account\_to\_create, account\_to\_change and system\_program
+
 ```rust
 #[derive(Accounts)]
 pub struct CheckingAccounts<'info> {
@@ -54,19 +55,23 @@ pub struct CheckingAccounts<'info> {
 ***
 
 ##### What are the concepts?
-- Crates (we import one using the use keyboard).
-- Macros (We use declare_id! and msg!).
-- Lifetimes
-- Traits be implement in our context
+
+* Crates (we import one using the use keyboard).
+* Macros (We use declare\_id! and msg!).
+* Lifetimes
+* Traits be implement in our context
 
 ##### What is the organization?
+
 We have a public module with a single instruction, wich recieves a context and
 return a success value, this context is an struct, we implement some traits in
 that struct to do the actual account checking.
 
 ##### What is the contract doing? What is the mechanism?
+
 It simply do account checking and returns errors if something doesn't checks,
 finally if everything is as expected return with success.
 
 ##### How could it be better? More efficient? Safer?
+
 The code could be better if contains more test cases in the test folder.
