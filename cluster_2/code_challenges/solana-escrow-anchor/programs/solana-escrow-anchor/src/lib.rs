@@ -92,21 +92,14 @@ pub struct Initialize<'info> {
     pub initializer: Signer<'info>,
     #[account(mut)]
     pub temp_token_account: Account<'info, TokenAccount>,
-    #[account(
-        constraint = *token_to_receive_account.to_account_info().owner == spl_token::id() @ ProgramError::IncorrectProgramId
-    )]
+    #[account(owner = spl_token::id())]
     pub token_to_receive_account: Account<'info, TokenAccount>,
     #[account(
         init, payer = initializer, space = Escrow::LEN,
-        constraint = !escrow_account.is_initialized @ ProgramError::AccountAlreadyInitialized
     )]
     pub escrow_account: Account<'info, Escrow>,
-    #[account(address = spl_token::id())]
-    /// CHECK:
-    pub token_program: AccountInfo<'info>,
-    #[account(address = system_program::ID)]
-    /// CHECK:
-    pub system_program: AccountInfo<'info>, // needed for init escrow_init
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -118,8 +111,7 @@ pub struct Reset<'info> {
     )]
     pub escrow_account: Account<'info, Escrow>,
     #[account(address = system_program::ID)]
-    /// CHECK:
-    pub system_program: AccountInfo<'info>, // needed for init escrow_init
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -134,7 +126,7 @@ pub struct Exchange<'info> {
     pub pdas_temp_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     /// CHECK:
-    pub initializers_main_account: AccountInfo<'info>,
+    pub initializers_main_account: UncheckedAccount<'info>,
     #[account(mut)]
     pub initializers_token_to_receive_account: Account<'info, TokenAccount>,
     #[account(mut, close = initializers_main_account,
@@ -143,11 +135,9 @@ pub struct Exchange<'info> {
         constraint = escrow_account.initializer_token_to_receive_account_pubkey == *initializers_token_to_receive_account.to_account_info().key @ ProgramError::InvalidAccountData,
     )]
     pub escrow_account: Box<Account<'info, Escrow>>,
-    #[account(address = spl_token::id())]
+    pub token_program: Program<'info, Token>,
     /// CHECK:
-    pub token_program: Program<'info, System>,
-    /// CHECK:
-    pub pda_account: Program<'info, Token>,
+    pub pda_account: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]
@@ -175,9 +165,8 @@ pub struct Cancel<'info> {
     /// CHECK:
     pub token_program: Program<'info, System>,
     /// CHECK:
-    pub pda_account: Program<'info, Token>,
+    pub pda_account: AccountInfo<'info>,
 }
-
 
 #[account]
 pub struct Escrow {
@@ -244,7 +233,7 @@ impl<'info> Exchange<'info> {
     fn into_close_temp_token_context(&self) -> CpiContext<'_, '_, '_, 'info, CloseAccount<'info>> {
         let cpi_accounts = CloseAccount {
             account: self.pdas_temp_token_account.to_account_info().clone(),
-            destination: self.initializers_main_account.clone(),
+            destination: self.initializers_main_account.to_account_info().clone(),
             authority: self.pda_account.to_account_info().clone(),
         };
         let cpi_program = self.token_program.to_account_info();
