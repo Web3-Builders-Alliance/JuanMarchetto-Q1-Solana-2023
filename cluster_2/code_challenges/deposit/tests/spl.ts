@@ -100,7 +100,7 @@ describe("deposit", () => {
 
   });
 
-  xit("Create mock SPL Token", async () => {
+  it("Create mock SPL Token", async () => {
 
     let token_mint = await createMint(
       provider.connection,
@@ -124,7 +124,7 @@ describe("deposit", () => {
 
   });
 
-  xit("Deposits SPL Token", async () => {
+  it("Deposits SPL Token", async () => {
     let to_token_acct = getAssociatedTokenAddressSync(mint.publicKey, pda_auth, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
     let from_token_acct = getAssociatedTokenAddressSync(mint.publicKey, deposit_auth.publicKey, false, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
 

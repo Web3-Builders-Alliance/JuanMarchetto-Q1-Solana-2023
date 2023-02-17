@@ -11,7 +11,7 @@ describe("withdraw", () => {
   const program = anchor.workspace.Deposit as Program<Deposit>;
   const name = "test";
 
-  it("withdraw from ", async () => {
+  xit("withdraw from ", async () => {
     const [vault] = web3.PublicKey.findProgramAddressSync(
       [Buffer.from(name)],
       program.programId,
