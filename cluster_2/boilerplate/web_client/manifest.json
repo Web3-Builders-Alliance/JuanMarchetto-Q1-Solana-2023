@@ -1,6 +1,6 @@
 {
-  "name": "Solana Four in Line Game!",
-  "short_name": "Four in Line",
+  "name": "Solana Boilerplate",
+  "short_name": "Solana Boilerplate",
   "display": "standalone",
   "start_url": "./",
   "theme_color": "#000000",
