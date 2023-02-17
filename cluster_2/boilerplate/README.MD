@@ -1,12 +1,11 @@
-### Steps to run this project's Back End:
+### Steps to run this project's Programs:
 
 1. Follow [this guide](https://book.anchor-lang.com/getting_started/installation.html) to install all the needed software
-2. Clone this repo:
-    `git clone https://github.com/cooperativamental/mate.git`
+2. Clone this repo
 3. Run a local validator
     `solana-test-validator`
 4. Open another terminal, cd into the project's folder and install dependencies
-    `cd mate && yarn`
+    `cd <project-directory> && yarn`
 5. Build the program
     `anchor build`
 6. Set correct program id
