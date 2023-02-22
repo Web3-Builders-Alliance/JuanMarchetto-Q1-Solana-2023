@@ -74,7 +74,29 @@ pub mod deposit {
     }
 
     pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64) -> Result<()> {
-      
+        let deposit_account = &ctx.accounts.deposit_account;
+
+        let cpi_accounts = SplTransfer {
+            from: ctx.accounts.from_token_acct.to_account_info(),
+            to: ctx.accounts.to_token_acct.to_account_info(),
+            authority: ctx.accounts.pda_auth.to_account_info(),
+        };
+
+        let seeds = &[
+            b"auth",
+            deposit_account.to_account_info().key.as_ref(),
+            &[deposit_account.auth_bump],
+        ];
+
+        let signer = &[&seeds[..]];
+
+        let cpi = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer,
+        );
+
+        anchor_spl::token::transfer(cpi, amount)?;
 
         Ok(())
     }
@@ -144,7 +166,25 @@ pub struct Withdraw<'info> {
 }
 
 #[derive(Accounts)]
-pub struct WithdrawSpl {
+pub struct WithdrawSpl<'info> {
+    #[account(has_one = deposit_auth)]
+    pub deposit_account: Account<'info, Vault>,
+    #[account(seeds = [b"auth", deposit_account.key().as_ref()], bump = deposit_account.auth_bump)]
+    /// CHECK: no need to check this.
+    pub pda_auth: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub deposit_auth: Signer<'info>,
+    #[account(mut)]
+    pub to_token_acct: Account<'info, TokenAccount>,
+    #[account(mut,
+        associated_token::mint = token_mint,
+        associated_token::authority = pda_auth,
+    )]
+    pub from_token_acct: Account<'info, TokenAccount>,
+    pub token_mint: Account<'info, Mint>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
 #[account]
