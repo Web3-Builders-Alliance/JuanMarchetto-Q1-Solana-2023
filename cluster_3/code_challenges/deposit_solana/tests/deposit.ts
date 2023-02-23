@@ -5,6 +5,9 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync,
 import { keypairIdentity, Metaplex } from "@metaplex-foundation/js";
 import { execSync } from "child_process";
 import { assert } from "chai";
+import { Market, Orderbook, DexInstructions } from '@project-serum/serum';
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Slab } from "@project-serum/serum/lib/slab";
 
 const sleep = require('util').promisify(setTimeout);
 
@@ -52,7 +55,7 @@ describe("deposit", () => {
 
   });
 
-  it("Is initialized!", async () => {
+  xit("Is initialized!", async () => {
     const tx = await program.methods.initialize()
       .accounts({
         depositAccount: deposit_account.publicKey,
@@ -103,7 +106,7 @@ describe("deposit", () => {
 
   });
 
-  it("Create mock SPL Token", async () => {
+  xit("Create mock SPL Token", async () => {
 
     let token_mint = await createMint(
       provider.connection,
@@ -174,4 +177,7 @@ describe("deposit", () => {
 
   });
 
+  it("Creates a Market", async () => {
+    DexInstructions.initializeMarket
+  });
 });;

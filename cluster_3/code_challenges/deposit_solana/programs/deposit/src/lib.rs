@@ -133,7 +133,7 @@ pub mod deposit {
         let client_order_id = 0;
         let limit = 0;
 
-        let order:NewOrderV3 = ctx.accounts.into();
+        let order: NewOrderV3 = ctx.accounts.into();
 
         let cpi = CpiContext::new(dex_program, order);
 
@@ -151,17 +151,13 @@ pub mod deposit {
     }
 
     /// CODING CHALLENGE: complete this instruction handler
-    /// pass in the variables needed to cancel and order, 
+    /// pass in the variables needed to cancel and order,
     /// replace "......" with the correct variables
-    pub fn cancel_order(ctx: Context<CancelOrder>, order_id: u128 ) -> Result<()> {
+    pub fn cancel_order(ctx: Context<CancelOrder>, order_id: u128) -> Result<()> {
         let dex_program = ctx.accounts.dex_program.to_account_info();
         let order: CancelOrderV2 = ctx.accounts.into();
         let cpi = CpiContext::new(dex_program, order);
-        cancel_order_v2(
-            cpi,
-            Side::Ask,
-            order_id,
-        )
+        cancel_order_v2(cpi, Side::Ask, order_id)
     }
 }
 
@@ -268,24 +264,23 @@ pub struct NewOrder<'info> {
     // Token account where funds are transferred from for the order. If
     // posting a bid market A/B, then this is the SPL token account for B.
     /// CHECK: no need to check this.
-    pub order_payer_token_account: AccountInfo<'info>,
+    pub order_payer_token_account: Account<'info, TokenAccount>,
     /// CHECK: no need to check this.
     pub open_orders_authority: AccountInfo<'info>,
     // Also known as the "base" currency. For a given A/B market,
     // this is the vault for the A mint.
     /// CHECK: no need to check this.
-    pub coin_vault: AccountInfo<'info>,
+    pub coin_vault: Account<'info, TokenAccount>,
     // Also known as the "quote" currency. For a given A/B market,
     // this is the vault for the B mint.
     /// CHECK: no need to check this.
-    pub pc_vault: AccountInfo<'info>,
+    pub pc_vault: Account<'info, TokenAccount>,
     /// CHECK: no need to check this.
-    pub token_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
     /// CHECK: no need to check this.
-    pub rent: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
     pub dex_program: Program<'info, Dex>,
 }
-
 
 impl<'info> From<&mut NewOrder<'info>> for NewOrderV3<'info> {
     fn from(new_order: &mut NewOrder<'info>) -> Self {
@@ -296,12 +291,12 @@ impl<'info> From<&mut NewOrder<'info>> for NewOrderV3<'info> {
             event_queue: new_order.event_queue.clone(),
             market_bids: new_order.market_bids.clone(),
             market_asks: new_order.market_asks.clone(),
-            order_payer_token_account: new_order.order_payer_token_account.clone(),
+            order_payer_token_account: new_order.order_payer_token_account.to_account_info().clone(),
             open_orders_authority: new_order.open_orders_authority.clone(),
-            coin_vault: new_order.coin_vault.clone(),
-            pc_vault: new_order.pc_vault.clone(),
-            token_program: new_order.token_program.clone(),
-            rent: new_order.rent.clone(),
+            coin_vault: new_order.coin_vault.to_account_info().clone(),
+            pc_vault: new_order.pc_vault.to_account_info().clone(),
+            token_program: new_order.token_program.to_account_info().clone(),
+            rent: new_order.rent.to_account_info().clone(),
         }
     }
 }
@@ -323,21 +318,21 @@ pub struct CancelOrder<'info> {
     // Token account where funds are transferred from for the order. If
     // posting a bid market A/B, then this is the SPL token account for B.
     /// CHECK: no need to check this.
-    pub order_payer_token_account: AccountInfo<'info>,
+    pub order_payer_token_account: Account<'info, TokenAccount>,
     /// CHECK: no need to check this.
     pub open_orders_authority: AccountInfo<'info>,
     // Also known as the "base" currency. For a given A/B market,
     // this is the vault for the A mint.
     /// CHECK: no need to check this.
-    pub coin_vault: AccountInfo<'info>,
+    pub coin_vault: Account<'info, TokenAccount>,
     // Also known as the "quote" currency. For a given A/B market,
     // this is the vault for the B mint.
     /// CHECK: no need to check this.
-    pub pc_vault: AccountInfo<'info>,
+    pub pc_vault: Account<'info, TokenAccount>,
     /// CHECK: no need to check this.
-    pub token_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
     /// CHECK: no need to check this.
-    pub rent: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
     pub dex_program: Program<'info, Dex>,
 }
 
@@ -350,7 +345,6 @@ impl<'info> From<&mut CancelOrder<'info>> for CancelOrderV2<'info> {
             market_bids: new_order.market_bids.clone(),
             market_asks: new_order.market_asks.clone(),
             open_orders_authority: new_order.open_orders_authority.clone(),
-
         }
     }
 }
