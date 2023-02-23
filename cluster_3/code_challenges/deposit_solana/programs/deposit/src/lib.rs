@@ -153,18 +153,15 @@ pub mod deposit {
     /// CODING CHALLENGE: complete this instruction handler
     /// pass in the variables needed to cancel and order, 
     /// replace "......" with the correct variables
-    pub fn cancel_order(ctx: Context<anchor_spl::dex::CancelOrderV2>, order_id: u128 ) -> Result<()> {
-
-        let market = ctx.accounts.market;
-        let market_bids = ctx.accounts.market_bids;
-        let market_asks = ctx.accounts.market_asks;
-        let open_orders = ctx.accounts.open_orders;
-        let open_orders_authority= ctx.accounts.open_orders_authority;
-        let event_queue= ctx.accounts.event_queue;
-        let open_orders_account = open_orders.key;
-        let open_orders_account_owner = open_orders_authority.key;
-        let side = Side::Ask;
-        dex::cancel_order_v3(ID, market, market_bids, market_asks, open_orders_account, open_orders_account_owner, event_queue, side, order_id)
+    pub fn cancel_order(ctx: Context<CancelOrder>, order_id: u128 ) -> Result<()> {
+        let dex_program = ctx.accounts.dex_program.to_account_info();
+        let order: CancelOrderV2 = ctx.accounts.into();
+        let cpi = CpiContext::new(dex_program, order);
+        cancel_order_v2(
+            cpi,
+            Side::Ask,
+            order_id,
+        )
     }
 }
 
