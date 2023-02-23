@@ -286,6 +286,7 @@ pub struct NewOrder<'info> {
     pub dex_program: Program<'info, Dex>,
 }
 
+
 impl<'info> From<&mut NewOrder<'info>> for NewOrderV3<'info> {
     fn from(new_order: &mut NewOrder<'info>) -> Self {
         NewOrderV3 {
@@ -301,6 +302,55 @@ impl<'info> From<&mut NewOrder<'info>> for NewOrderV3<'info> {
             pc_vault: new_order.pc_vault.clone(),
             token_program: new_order.token_program.clone(),
             rent: new_order.rent.clone(),
+        }
+    }
+}
+
+#[derive(Accounts)]
+pub struct CancelOrder<'info> {
+    /// CHECK: no need to check this.
+    pub market: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub open_orders: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub request_queue: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub event_queue: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub market_bids: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub market_asks: AccountInfo<'info>,
+    // Token account where funds are transferred from for the order. If
+    // posting a bid market A/B, then this is the SPL token account for B.
+    /// CHECK: no need to check this.
+    pub order_payer_token_account: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub open_orders_authority: AccountInfo<'info>,
+    // Also known as the "base" currency. For a given A/B market,
+    // this is the vault for the A mint.
+    /// CHECK: no need to check this.
+    pub coin_vault: AccountInfo<'info>,
+    // Also known as the "quote" currency. For a given A/B market,
+    // this is the vault for the B mint.
+    /// CHECK: no need to check this.
+    pub pc_vault: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub token_program: AccountInfo<'info>,
+    /// CHECK: no need to check this.
+    pub rent: AccountInfo<'info>,
+    pub dex_program: Program<'info, Dex>,
+}
+
+impl<'info> From<&mut CancelOrder<'info>> for CancelOrderV2<'info> {
+    fn from(new_order: &mut CancelOrder<'info>) -> Self {
+        CancelOrderV2 {
+            market: new_order.market.clone(),
+            open_orders: new_order.open_orders.clone(),
+            event_queue: new_order.event_queue.clone(),
+            market_bids: new_order.market_bids.clone(),
+            market_asks: new_order.market_asks.clone(),
+            open_orders_authority: new_order.open_orders_authority.clone(),
+
         }
     }
 }
