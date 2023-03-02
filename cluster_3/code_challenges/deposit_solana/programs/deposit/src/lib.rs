@@ -1,4 +1,8 @@
 use anchor_lang::{prelude::*, system_program};
+use anchor_spl::dex::serum_dex::{
+    instruction::SelfTradeBehavior,
+    matching::{OrderType, Side},
+};
 use anchor_spl::{
     associated_token::AssociatedToken,
     dex::{self, cancel_order_v2, close_open_orders, new_order_v3, CancelOrderV2, Dex, NewOrderV3},
@@ -11,11 +15,7 @@ use anchor_spl::{
     },
 };
 use std::num::NonZeroU64;
-
-use anchor_spl::dex::serum_dex::{
-    instruction::SelfTradeBehavior,
-    matching::{OrderType, Side},
-};
+use whitelist;
 
 use mpl_token_metadata::state::DataV2;
 
@@ -184,6 +184,14 @@ pub struct DepositNative<'info> {
     pub sol_vault: SystemAccount<'info>,
     #[account(mut)]
     pub deposit_auth: Signer<'info>,
+    #[account(seeds = [
+        pda_auth.key.as_ref(),
+        deposit_auth.key().as_ref(),],
+        bump,
+        seeds::program = whitelist_program)
+    ]
+    pub whithelist: Account<'info, whitelist::WhitelistPDA>,
+    pub whitelist_program: Program<'info, whitelist::program::Whitelist>,
     pub system_program: Program<'info, System>,
 }
 
@@ -198,6 +206,14 @@ pub struct WithdrawNative<'info> {
     pub sol_vault: SystemAccount<'info>,
     #[account(mut)]
     pub deposit_auth: Signer<'info>,
+    #[account(seeds = [
+        pda_auth.key.as_ref(),
+        deposit_auth.key().as_ref(),],
+        bump,
+        seeds::program = whitelist_program)
+    ]
+    pub whithelist: Account<'info, whitelist::WhitelistPDA>,
+    pub whitelist_program: Program<'info, whitelist::program::Whitelist>,
     pub system_program: Program<'info, System>,
 }
 
@@ -222,6 +238,14 @@ pub struct DepositSpl<'info> {
     pub token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    #[account(seeds = [
+        pda_auth.key.as_ref(),
+        deposit_auth.key().as_ref(),],
+        bump,
+        seeds::program = whitelist_program)
+    ]
+    pub whithelist: Account<'info, whitelist::WhitelistPDA>,
+    pub whitelist_program: Program<'info, whitelist::program::Whitelist>,
     pub system_program: Program<'info, System>,
 }
 
@@ -244,6 +268,14 @@ pub struct WithdrawSpl<'info> {
     pub token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    #[account(seeds = [
+        pda_auth.key.as_ref(),
+        deposit_auth.key().as_ref(),],
+        bump,
+        seeds::program = whitelist_program)
+    ]
+    pub whithelist: Account<'info, whitelist::WhitelistPDA>,
+    pub whitelist_program: Program<'info, whitelist::program::Whitelist>,
     pub system_program: Program<'info, System>,
 }
 
@@ -291,7 +323,10 @@ impl<'info> From<&mut NewOrder<'info>> for NewOrderV3<'info> {
             event_queue: new_order.event_queue.clone(),
             market_bids: new_order.market_bids.clone(),
             market_asks: new_order.market_asks.clone(),
-            order_payer_token_account: new_order.order_payer_token_account.to_account_info().clone(),
+            order_payer_token_account: new_order
+                .order_payer_token_account
+                .to_account_info()
+                .clone(),
             open_orders_authority: new_order.open_orders_authority.clone(),
             coin_vault: new_order.coin_vault.to_account_info().clone(),
             pc_vault: new_order.pc_vault.to_account_info().clone(),
