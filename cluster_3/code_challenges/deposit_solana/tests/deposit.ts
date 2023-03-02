@@ -177,7 +177,26 @@ describe("deposit", () => {
 
   });
 
-  it("Creates a Market", async () => {
-    DexInstructions.initializeMarket
+ /* it("Creates a Market", async () => {
+    DexInstructions.initializeMarket({
+      market,
+      requestQueue,
+      eventQueue,
+      bids,
+      asks,
+      baseVault,
+      quoteVault,
+      baseMint,
+      quoteMint,
+      baseLotSize,
+      quoteLotSize,
+      feeRateBps,
+      vaultSignerNonce,
+      quoteDustThreshold,
+      programId,
+      authority,
+      pruneAuthority,
+      crankAuthority,
+    });
   });
-});;
+});;*/
